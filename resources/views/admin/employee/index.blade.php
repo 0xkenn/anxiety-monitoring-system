@@ -27,7 +27,7 @@
                     <td style="padding: 10px; border: 1px solid #dee2e6;">{{ $employee->middle_name }}</td>
                     <td style="padding: 10px; border: 1px solid #dee2e6;">{{ $employee->email }}</td>
                     <td style="padding: 10px; border: 1px solid #dee2e6;">
-                        <form action="{{ route('employee.destroy', $employee->employee_id) }}" method="post" style="display:inline;">
+                        <form action="{{ route('employee.destroy', $employee->id) }}" method="post" style="display:inline;">
                             @csrf
                             <button type="submit" style="background-color: #dc3545; border: none; color: white; padding: 2px 10px; font-size: 12px; cursor: pointer; border-radius: 5px; transition: background-color 0.3s ease;">
                                 <i class="fas fa-trash"></i> <!-- Trash icon only -->

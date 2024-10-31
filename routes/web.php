@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminChartController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChartController;
 use App\Http\Controllers\EmployeeController;
@@ -202,5 +203,6 @@ Route::prefix('admin')->middleware( ['auth:admin'])->group(function ()  {
     Route::post('/delete-counselor/{id}', [AdminController::class, 'deletecounselor'])->name('delete.counselor');
     Route::post('/delete-question/{id}', [AdminController::class, 'deletequestion'])->name('question.destroy');
     Route::post('logout/naka', [AdminController::class, 'logout'])->name('admin.logout');
+     Route::get('/charts/{type}', [AdminChartController::class, 'chartController'])->name('admin.charts.show');
 });
     
