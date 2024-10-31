@@ -66,10 +66,10 @@ class EmployeeController extends Controller
 
     public function dashboard()
     {
-        
+        $employeeId = auth()->guard('employee')->id();
        $name = auth()->guard()->user()->first_name;
         
-        return view('employee.home', compact('name'));
+        return view('employee.home', compact('name', 'employeeId'));
     }
 
     public function history()
@@ -150,7 +150,7 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $employee = Employee::find($id);
-        return view('employee.show', compact('employee'));
+        return view('employee.profile', compact('employee'));
     }
 
     public function logout(Request $request){

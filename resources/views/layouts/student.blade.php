@@ -308,7 +308,7 @@
           <i class="fas fa-user"></i> Profile
         </a>
         <div class="dropdown-menu" aria-labelledby="profileDropdown">
-          <a class="dropdown-item" href="#"><i class="fas fa-user"></i> Profile</a>
+          <a class="dropdown-item" href="{{ route('student.update', $studentId) }}"><i class="fas fa-user"></i> Profile</a>
           <form action="{{ route('student.logout') }}" method="POST" >
             @csrf
             <button class="dropdown-item" ><i class="fas fa-sign-out-alt" ></i> Logout</button>

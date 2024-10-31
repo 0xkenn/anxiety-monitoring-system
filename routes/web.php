@@ -55,9 +55,9 @@ Route::prefix('student')->middleware( ['auth:student'])->group(function () {
     // Route to show home
     Route::get('/home', [StudentController::class, 'home'])->name('studenthome');
     // Route to view and edit student profile
-    Route::get('/profile/{id}', [StudentController::class, 'show'])->name('profile');
+    Route::get('/profile/{id}', [StudentController::class, 'show'])->name('student.profile');
     Route::get('/profile/{id}/edit', [StudentController::class, 'edit'])->name('edit');
-    Route::put('/profile/{id}', [StudentController::class, 'update'])->name('update');
+    Route::put('/profile/{id}', [StudentController::class, 'update'])->name('student.update');
     Route::post('logout', [StudentController::class, 'logout'])->name('student.logout');
 });
 

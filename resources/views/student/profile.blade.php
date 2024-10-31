@@ -98,22 +98,22 @@
     <h1>Profile Information</h1>
 
     <div class="profile-field">
-      <span>Last Name:</span> {{ $student->last_name }}
+     <span>Last Name:</span> <input type="text" value="{{ $student->last_name }}">
     </div>
     <div class="profile-field">
-      <span>First Name:</span> {{ $student->first_name }}
+      <span>First Name:</span><input type="text"  value="{{ $student->first_name }}">
     </div>
     <div class="profile-field">
-      <span>Middle Name:</span> {{ $student->middle_name }}
+      <span>Middle Name:</span> <input type="text" value="{{ $student->middle_name }}">
     </div>
     <div class="profile-field">
-      <span>Birth Date:</span> {{ $student->birthdate }}
+      <span>Birth Date:</span> <input type="text" value="{{ $student->birthdate }}">
     </div>
     <div class="profile-field">
       <span>Sex:</span> {{ $student->sex }}
     </div>
     <div class="profile-field">
-      <span>Program:</span> {{ $student->program }}
+      <span>Program:</span> {{ $student->program->program_name }}
     </div>
     <div class="profile-field">
       <span>Mobile Number:</span> {{ $student->mobile_number }}
@@ -131,7 +131,7 @@
       <span>Barangay:</span> {{ $student->barangay }}
     </div>
 
-    <a href="{{ route('student.edit') }}" class="edit-link">Edit Profile</a>
+    <a href="{{ route('student.update', $student->student_id) }}" class="edit-link">Update Profile</a>
   </div>
 
 </body>

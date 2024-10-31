@@ -98,7 +98,7 @@
     <h1>Employee Profile Information</h1>
 
     <div class="profile-field">
-      <span>Last Name:</span> {{ $employee->last_name }}
+      <span>Last Name:</span> <input type="text" value=" {{ $employee->last_name }}">
     </div>
     <div class="profile-field">
       <span>First Name:</span> {{ $employee->first_name }}
@@ -131,7 +131,7 @@
       <span>Barangay:</span> {{ $employee->barangay }}
     </div>
 
-    <a href="{{ route('employee.edit') }}" class="edit-link">Edit Profile</a>
+    <button class="edit-link">Edit Profile</button>
   </div>
 
 </body>

@@ -13,12 +13,17 @@ use App\Models\Student;
 
 class StudentController extends Controller
 {
+    public function layout(){
+        $studentId = auth()->guard('student')->id();
+        return view('layouts.student', compact('studentId'));
+    }
     public function create()
     {
         $programs = Program::all();
   
         return view('student.register', compact('programs' ));
     }
+    
 
     public function store(StoreStudentRequest $request)
 {
@@ -68,9 +73,9 @@ class StudentController extends Controller
 
     public function dashboard()
     {
-        
+         $studentId = auth()->guard('student')->id();
          $name = auth()->guard('student')->user()->first_name;
-        return view('student.home', compact('name'));
+        return view('student.home', compact('name', 'studentId'));
     }
 
     public function history()
@@ -84,9 +89,9 @@ class StudentController extends Controller
     }
 
     public function home()
-    {
+    { $studentId = auth()->guard('student')->id();
             $name = auth()->guard('student')->user()->first_name;
-        return view('student.home', compact('name'));
+        return view('student.home', compact('name', 'studentId'));
     }
 
     public function contact()
@@ -145,7 +150,7 @@ class StudentController extends Controller
     public function show($id)
     {
         $student = Student::find($id);
-        return view('student.show', compact('student'));
+        return view('student.profile', compact('student'));
     }
 
     public function logout(Request $request){
