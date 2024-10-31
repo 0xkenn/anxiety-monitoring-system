@@ -117,7 +117,7 @@ Route::prefix('counselor')->middleware( ['auth:counselor'])->group(function ()  
 
     Route::get('/charts/{type}', [ChartController::class, 'showChart'])->name('charts.show');
      Route::get('/charts/student', [ChartController::class, 'studentChart']);
-    Route::get('/charts/employee', [ChartController::class, 'employeeChart']);
+    Route::get('/charts/employee', [ChartController::class, 'employeeChart'])->name('emp.chart.counselor');
 });
 
 

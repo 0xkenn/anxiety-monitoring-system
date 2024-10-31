@@ -12,10 +12,13 @@ class ChartController extends Controller
     {
         $chartType = $type; // Set the chart type based on the route parameter
         $lowStudent = Question::where('status', 'Low')->whereNotNull('student_id')->count();
+       
         $moderateStudent = Question::where('status', 'Moderate')->whereNotNull('student_id')->count();
         $severeStudent = Question::where('status', 'Severe')->whereNotNull('student_id')->count();
          $lowEmployee = Question::where('status', 'Low')->whereNotNull('employee_id')->count();
+        
         $moderateEmployee = Question::where('status', 'Moderate')->whereNotNull('employee_id')->count();
+       
         $severeEmployee = Question::where('status', 'Severe')->whereNotNull('employee_id')->count();
         $totalStudents = $lowStudent + $moderateStudent + $severeStudent;
         $totalEmployees = $lowEmployee + $moderateEmployee + $severeEmployee;
@@ -91,29 +94,54 @@ class ChartController extends Controller
 
 
 $employeeData = [
-    'labels' => ['Severe', 'Moderate', 'Low'],
+    'labels' => ['Low', 'Moderate', 'Severe'],
     'datasets' => [
         [
             'label' => 'Employees',
             'data' => [$lowEmployee, $moderateEmployee, $severeEmployee],
             'backgroundColor' => [
-                'rgba(255, 0, 0, 0.6)',    // Red for "s"
+                 // Red for "s"
+                  'rgba(0, 128, 0, 0.6)' ,
                 'rgba(255, 215, 0, 0.6)',  // Gold for "Moderate"
-                'rgba(0, 128, 0, 0.6)'     // Green for "l"
+                 
+                 'rgba(255, 0, 0, 0.6)',    // Green for "l"
+
             ], // Example color for employees
         ],
     ],
 ];
+switch(true) {
+    case ($lowEmployee >= $moderateEmployee && $lowEmployee >= $severeEmployee):
+        $highestStatusE = 'Low';
+        break;
+    case ($moderateEmployee >= $lowEmployee && $moderateEmployee >= $severeEmployee):
+        $highestStatusE = 'Moderate';
+        break;
+    case ($severeEmployee >= $lowEmployee && $severeEmployee >= $moderateEmployee):
+        $highestStatusE = 'Severe';
+        break;
+}
+switch(true) {
+    case ($lowStudent >= $moderateStudent && $lowStudent >= $severeStudent):
+        $highestStatus = 'Low';
+        break;
+    case ($moderateStudent >= $lowStudent && $moderateStudent >= $severeStudent):
+        $highestStatus = 'Moderate';
+        break;
+    case ($severeStudent >= $lowStudent && $severeStudent >= $moderateStudent):
+        $highestStatus = 'Severe';
+        break;
+}
 
 $subQuery = DB::table('questions as a')
     ->join('students as st', 'a.student_id', '=', 'st.student_id')
     ->join('schools as s', 'st.school_id', '=', 's.id')
     ->select(
-        's.school_name',
+        's.abbrev',
         DB::raw('COUNT(a.student_id) as moderate_count')
     )
-    ->where('a.status', '=', 'Moderate')  // Filter by Moderate status
-    ->groupBy('s.school_name')
+    ->where('a.status', '=', $highestStatus)  // Filter by Moderate status
+    ->groupBy('s.abbrev')
     ->orderBy('moderate_count', 'DESC');  // Sort by the count in descending order
 
 // Get the data
@@ -124,25 +152,25 @@ $chartData = [
     'labels' => [],
     'datasets' => [
         [
-            'label' => 'Moderate Assessment Status',
+            'label' => 'highest Assessment Status',
             'data' => []
         ]
     ]
 ];
 
 foreach ($data as $row) {
-    $chartData['labels'][] = $row->school_name;
+    $chartData['labels'][] = $row->abbrev;
     $chartData['datasets'][0]['data'][] = $row->moderate_count;
 }
 $eSubQuery = DB::table('questions as a')
-    ->join('employees as st', 'a.employee_id', '=', 'st.employee_id')
+    ->join('employees as st', 'a.employee_id', '=', 'st.id')
     ->join('schools as s', 'st.school_id', '=', 's.id')
     ->select(
-        's.school_name',
-        DB::raw('COUNT(a.employee_id) as moderate_count')
+        's.abbrev',
+        DB::raw('COUNT(a.employee_id) as moderate_count ')
     )
-    ->where('a.status', '=', 'Moderate')  // Filter by Moderate status
-    ->groupBy('s.school_name')
+    ->where('a.status', '=', $highestStatusE)  // Filter by Moderate status
+    ->groupBy('s.abbrev')
     ->orderBy('moderate_count', 'DESC');  // Sort by the count in descending order
 
 // Get the data
@@ -153,14 +181,14 @@ $empChartData = [
     'labels' => [],
     'datasets' => [
         [
-            'label' => 'Moderate Assessment Status',
+            'label' => 'highest Assessment Status',
             'data' => []
         ]
     ]
 ];
 
 foreach ($empData as $row) {
-    $empChartData['labels'][] = $row->school_name;
+    $empChartData['labels'][] = $row->abbrev;
     $empChartData['datasets'][0]['data'][] = $row->moderate_count;
 }
 
@@ -182,29 +210,31 @@ foreach ($empData as $row) {
     {
 
         $lowEmployee = Question::where('status', 'Low')->whereNotNull('employee_id')->count();
+        
         $moderateEmployee = Question::where('status', 'Moderate')->whereNotNull('employee_id')->count();
+       
         $severeEmployee = Question::where('status', 'Severe')->whereNotNull('employee_id')->count();
         $totalEmployees = $lowEmployee + $moderateEmployee + $severeEmployee;
-         $lowAnxietyCounts = Question::join('students', 'questions.student_id', '=', 'students.student_id')
-        ->join('schools', 'students.school_id', '=', 'schools.id')
-        ->select('schools.abbrev', DB::raw('COUNT(questions.student_id) as student_count'))
+         $lowAnxietyCounts = Question::join('employees', 'questions.employee_id', '=', 'employees.id')
+        ->join('schools', 'employee.school_id', '=', 'schools.id')
+        ->select('schools.abbrev', DB::raw('COUNT(questions.employee_id) as employee_count'))
         ->where('questions.status', 'Low') // Filter for low anxiety status
         ->groupBy('schools.abbrev') // Group by school abbreviation
         ->get(); // Execute the query
-      
+     
         
-        $moderateAnxietyCounts = Question::join('students', 'questions.student_id', '=', 'students.student_id')
-        ->join('schools', 'students.school_id', '=', 'schools.id')
-        ->select('schools.abbrev', DB::raw('COUNT(questions.student_id) as student_count'))
+        $moderateAnxietyCounts = Question::join('employees', 'questions.employee_id', '=', 'employees.id')
+        ->join('schools', 'employees.school_id', '=', 'schools.id')
+        ->select('schools.abbrev', DB::raw('COUNT(questions.employee_id) as employee_count'))
         ->where('questions.status', 'Moderate') // Filter for low anxiety status
         ->groupBy('schools.abbrev') // Group by school abbreviation
         ->get(); // Execute the query
        
 
 
-        $severeAnxietyCounts = Question::join('students', 'questions.student_id', '=', 'students.student_id')
-        ->join('schools', 'students.school_id', '=', 'schools.id')
-        ->select('schools.abbrev', DB::raw('COUNT(questions.student_id) as student_count'))
+        $severeAnxietyCounts = Question::join('employees', 'questions.employee_id', '=', 'employees.id')
+        ->join('schools', 'employees.school_id', '=', 'schools.id')
+        ->select('schools.abbrev', DB::raw('COUNT(questions.employee_id) as employee_count'))
         ->where('questions.status', 'Severe') // Filter for low anxiety status
         ->groupBy('schools.abbrev') // Group by school abbreviation
         ->get(); // Execute the query
@@ -213,15 +243,15 @@ foreach ($empData as $row) {
     
     // Prepare combined counts for each anxiety status
     foreach ($lowAnxietyCounts as $count) {
-        $combinedCounts[$count->abbrev]['Low'] = $count->student_count;
+        $combinedCounts[$count->abbrev]['Low'] = $count->employee_count;
     }
 
     foreach ($moderateAnxietyCounts as $count) {
-        $combinedCounts[$count->abbrev]['Moderate'] = $count->student_count;
+        $combinedCounts[$count->abbrev]['Moderate'] = $count->employee_count;
     }
 
     foreach ($severeAnxietyCounts as $count) {
-        $combinedCounts[$count->abbrev]['Severe'] = $count->student_count;
+        $combinedCounts[$count->abbrev]['Severe'] = $count->employee_count;
     }
    
         
@@ -248,14 +278,14 @@ foreach ($empData as $row) {
 
 
 $eSubQuery = DB::table('questions as a')
-    ->join('employees as st', 'a.employee_id', '=', 'st.employee_id')
+    ->join('employees as st', 'a.employee_id', '=', 'st.id')
     ->join('schools as s', 'st.school_id', '=', 's.id')
     ->select(
-        's.school_name',
+        's.abbrev',
         DB::raw('COUNT(a.employee_id) as moderate_count')
     )
     ->where('a.status', '=', 'Moderate')  // Filter by Moderate status
-    ->groupBy('s.school_name')
+    ->groupBy('s.abbrev')
     ->orderBy('moderate_count', 'DESC');  // Sort by the count in descending order
 
 // Get the data
@@ -273,9 +303,10 @@ $empChartData = [
 ];
 
 foreach ($empData as $row) {
-    $empChartData['labels'][] = $row->school_name;
+    $empChartData['labels'][] = $row->abbrev;
     $empChartData['datasets'][0]['data'][] = $row->moderate_count;
 }
+
         return view('guidance_counselor.employee-chart', compact('lowEmployee', 'moderateEmployee', 'severeEmployee', 'employeeData'));
     }
 }

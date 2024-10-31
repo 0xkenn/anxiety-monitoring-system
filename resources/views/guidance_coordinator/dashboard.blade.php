@@ -9,7 +9,7 @@
             <div class="card-body">
              
                 <h5 class="card-title">Low Anxiety</h5>
-                <h5 class="card-title">{{ $lowAnxiety->count()  }} </h5>
+                <h5 class="card-title">{{ $lowAnxietye->count()  }} </h5>
             
          
             </div>
@@ -21,7 +21,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Moderate Anxiety</h5>
-              <h5 class="card-title">{{ $moderateAnxiety->count() }}</h5>
+              <h5 class="card-title">{{ $moderateAnxietye->count() }}</h5>
             </div>
           </div>
         </div>
@@ -31,7 +31,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Severe Anxiety</h5>
-              <h5 class="card-title">{{ $severeAnxiety->count() }}</h5>
+              <h5 class="card-title">{{ $severeAnxietye->count() }}</h5>
             </div>
           </div>
         </div>
@@ -49,9 +49,30 @@
   </div>
 </div>
 
-    <div style="height: 300px; width: 300px;">
-      <canvas id="chart"></canvas>
+     <div class="row">
+    <!-- Chart 1 -->
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title">Student Pie Chart</h5>
+                <div class="chart-container" style="height: 300px; width: 300px;">
+                    <canvas id="chart" width="300" height="350"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
+    <!-- Chart 2 -->
+    <div class="col-md-6 mb-3">
+        <div class="card shadow">
+            <div class="card-body">
+                <h5 class="card-title">Employee Program Graph</h5>
+                <div class="chart-container" style="height: 300px; width: 300px;">
+                    <canvas id="bar-chart-horizontal" width="800" height="600"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
   </div>
 </main>
 
@@ -60,21 +81,28 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 <script type="text/javascript">
   // Student Data
-  let studentLabels = {{ Js::from($studentLabels) }};
-  let studentUsers = {{ Js::from($studentData) }};
-  
+
   // Employee Data
   let employeeLabels = {{ Js::from($employeeLabels) }}; 
   let employeeUsers = {{ Js::from($employeeData) }}; 
+  let programData = {{ Js::from($programData) }}
+  let programDataArray = Object.values(programData);
+
+// Extract labels (program names) and data (counts)
+let programLabels = programDataArray.map(item => item.program);  // Extract program names
+let programCounts = programDataArray.map(item => item.count);   // Extract student counts
 
   function createChart(data, labels) {
     var total = data.reduce((a, b) => a + b, 0);
     var percentages = data.map(user => ((user / total) * 100).toFixed(0));
 
     var colors = [
-      'rgb(255, 255, 0)', // Color for moderate Anxiety
-      'rgb(255, 0, 0)',   // Color for severe Anxiety
+          'rgb(255, 0, 0)',   // Color for severe Anxiety
+       'rgb(255, 255, 0)', // Color for moderate Anxiety
+   
       'rgb(255, 99, 132)',// Color for low Anxiety
+       
+   
     ];
 
     const chartData = {
@@ -106,35 +134,31 @@
   }
 
   // Initial Chart Display
-  let currentChart = createChart(studentUsers, studentLabels);
-
-  // Event Listener for Dropdown
-  // JavaScript Code for Switching Charts
-document.getElementById('chartSelector').addEventListener('change', function() {
-  // Destroy previous chart instance if it exists
-  if (currentChart) {
-    currentChart.destroy();
-    console.log('Previous chart destroyed');
-  }
-
-  // Create a new chart based on the selected option
-  switch (this.value) {
-    case 'students':
-      currentChart = createChart(studentUsers, studentLabels);
-      console.log('Student chart created');
-      break;
-    case 'employees':
-      currentChart = createChart(employeeUsers, employeeLabels);
-      console.log('Employee chart created');
-      break;
-    default:
-      console.error('Invalid chart type selected');
-  }
-
-  // Additional logging to help with debugging
-  if (currentChart === undefined) {
-    console.error('Error creating chart');
-  }
+  let currentChart = createChart(employeeUsers, employeeLabels  );
+new Chart(document.getElementById("bar-chart-horizontal"), {
+    type: 'bar',
+    data: {
+        labels: programLabels,  // Dynamic labels (program names)
+        datasets: [{
+            label: 'Number of Students',
+            data: programCounts,  // Dynamic data (counts)
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],  // Colors for each bar
+        }]
+    },
+    options: {
+        indexAxis: 'y',  // Horizontal bar chart
+        scales: {
+            x: {
+                beginAtZero: true,
+            }
+        },
+        legend: { display: true },
+        title: {
+            display: true,
+            text: 'Number of Students by Program with Highest Anxiety Status'
+        }
+    }
 });
+
 
 </script>

@@ -26,7 +26,7 @@ class GuidanceCoordinatorController extends Controller
         return view ('guidance_coordinator.home');
     }
         public function dashboard(){
-            $id = Auth::guard('coordinator')->id();
+           $id = Auth::guard('coordinator')->id();
                 //get the school id of the authenticated coordinator
             $schoolId = Coordinator::where('id', $id)->value('school_id');
            $lowAnxiety = Question::with('student') // Eager load the related 'student'
@@ -50,65 +50,70 @@ class GuidanceCoordinatorController extends Controller
     })
     ->get();
 
-      $lowAnxietye = Question::with('employee') // Eager load the related 'student'
-    ->where('status', 'Low') // Filter for low anxiety assessments
-    ->whereHas('student', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
-    })
-    ->get(); 
+    $studentLabels = [];
+  $studentData = []; 
 
-      $moderateAnxietye = Question::with('employee') // Eager load the related 'student'
-    ->where('status', 'Moderate') // Filter for low anxiety assessments
-    ->whereHas('student', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
-    })
-    ->get();
-    $severeAnxietye = Question::with('employee') // Eager load the related 'student'
-    ->where('status', 'Severe') // Filter for low anxiety assessments
-    ->whereHas('student', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
-    })
-    ->get();
-   
-            // $students = Student::where('school_id', $schoolId)->get();
-          
-           $studentAnxietyCounts = Question::whereHas('student', function($query) use ($schoolId) {
+  $studentAnxietyCounts = Question::whereHas('student', function($query) use ($schoolId) {
     $query->where('school_id', $schoolId);
 })
-->select('status', \DB::raw('count(*) as total')) // Count total entries per status
+->select('status', DB::raw('count(*) as total')) // Count total entries per status
 ->groupBy('status') // Group by the status
 ->get();
-
- $employeeAnxietyCounts = Question::whereHas('employee', function($query) use ($schoolId) {
-    $query->where('school_id', $schoolId);
-})
-->select('status', \DB::raw('count(*) as total')) // Count total entries per status
-->groupBy('status') // Group by the status
-->get();
-
-
-
-// Prepare labels and data arrays
-
-$employeeLabels = []; // Initialize labels array
-$employeeData = [];
- $studentLabels = [];
-  $studentData = [];   // Initialize data array
-
-foreach($employeeAnxietyCounts as $anxieti){
-    $employeeLabels[] = $anxieti->status;
-    $employeeData[] = $anxieti->total;
-}
-
-foreach ($studentAnxietyCounts as $anxiety) {
+  foreach ($studentAnxietyCounts as $anxiety) {
     $studentLabels[] = $anxiety->status; // Anxiety status as labels
     $studentData[] = $anxiety->total; // Count as data
 }
- 
+// Assuming you have the authenticated coordinator's school ID
+$schoolId = auth()->user()->school_id; // Get the authenticated coordinator's school ID
+
+$highestAnxieties = Question::select('student_id', 'status', DB::raw('count(*) as total'))
+    ->whereHas('student', function ($query) use ($schoolId) {
+        $query->where('school_id', $schoolId);
+    })
+    ->groupBy('student_id', 'status')
+    ->orderBy('total', 'desc')
+    ->get();
+
+$studentsHighestStatus = [];
+
+foreach ($highestAnxieties as $anxiety) {
+    $studentsHighestStatus[$anxiety->student_id] = $anxiety->status;
+}
+$statusCounts = array_count_values($studentsHighestStatus);
+
+// Get the status with the highest occurrence
+$highestStatus = array_search(max($statusCounts), $statusCounts);
+
+// Filter students to only include those with the highest anxiety status
+$filteredStudents = array_filter($studentsHighestStatus, function ($status) use ($highestStatus) {
+    return $status == $highestStatus;
+});
+
+$programData = [];
+
+foreach ($filteredStudents as $studentId => $status) {
+    $student = Student::find($studentId);
+
+    // Ensure the student belongs to the coordinator's school and has a program
+    if ($student->school_id == $schoolId && $student->program) {
+        $programId = $student->program_id;
+
+        // Add or update the program count
+        if (!isset($programData[$programId])) {
+            $programData[$programId] = [
+                'program' => $student->program->program_name, // safely access program_name
+                'count' => 1
+            ];
+        } else {
+            $programData[$programId]['count']++;
+        }
+    }
+}
 
 
-            return view('guidance_coordinator.dashboard' , compact('studentLabels', 'studentData', 'severeAnxiety', 'lowAnxiety', 'moderateAnxiety', 'employeeLabels', 'employeeData', 'lowAnxietye', 'severeAnxietye', 
-            'moderateAnxietye'));
+
+   
+    return view('guidance_coordinator.student_data', compact('lowAnxiety', 'moderateAnxiety' , 'severeAnxiety', 'studentLabels', 'studentData', 'programData'));
     }
      public function Login(){
         return view ('guidance_coordinator.login');
@@ -161,6 +166,7 @@ public function studentData(){
        $id = Auth::guard('coordinator')->id();
                 //get the school id of the authenticated coordinator
             $schoolId = Coordinator::where('id', $id)->value('school_id');
+
            $lowAnxiety = Question::with('student') // Eager load the related 'student'
     ->where('status', 'Low') // Filter for low anxiety assessments
     ->whereHas('student', function($query) use ($schoolId) {
@@ -232,7 +238,7 @@ foreach ($filteredStudents as $studentId => $status) {
         // Add or update the program count
         if (!isset($programData[$programId])) {
             $programData[$programId] = [
-                'program' => $student->program->program_name, // safely access program_name
+                'program' => $student->program->abbrev, // safely access program_name
                 'count' => 1
             ];
         } else {
@@ -247,51 +253,48 @@ foreach ($filteredStudents as $studentId => $status) {
     return view('guidance_coordinator.student_data', compact('lowAnxiety', 'moderateAnxiety' , 'severeAnxiety', 'studentLabels', 'studentData', 'programData'));
 }
 public function employeeData(){
-     $id = Auth::guard('coordinator')->id();
+        $id = Auth::guard('coordinator')->id();
                 //get the school id of the authenticated coordinator
-     $schoolId = Coordinator::where('id', $id)->value('school_id');
-
-     $lowAnxietye = Question::with('employee') // Eager load the related 'emp'
+            $schoolId = Coordinator::where('id', $id)->value('school_id');
+            
+           $lowAnxiety = Question::with('employee') // Eager load the related 'student'
     ->where('status', 'Low') // Filter for low anxiety assessments
     ->whereHas('employee', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the emp's school ID matches the coordinator's
+        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
     })
-    ->get(); 
-    
+    ->get();
 
-      $moderateAnxietye = Question::with('employee') // Eager load the related 'emp'
+
+      $moderateAnxiety = Question::with('employee') // Eager load the related 'student'
     ->where('status', 'Moderate') // Filter for low anxiety assessments
     ->whereHas('employee', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the emp's school ID matches the coordinator's
+        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
     })
     ->get();
-    
-    $severeAnxietye = Question::with('employee') // Eager load the related 'emp'
+
+    $severeAnxiety = Question::with('employee') // Eager load the related 'student'
     ->where('status', 'Severe') // Filter for low anxiety assessments
     ->whereHas('employee', function($query) use ($schoolId) {
-        $query->where('school_id', $schoolId); // Ensure the emp's school ID matches the coordinator's
+        $query->where('school_id', $schoolId); // Ensure the student's school ID matches the coordinator's
     })
     ->get();
 
-     $employeeAnxietyCounts = Question::whereHas('employee', function($query) use ($schoolId) {
+    $employeeLabels = [];
+  $employeeData = []; 
+
+  $employeeAnxietyCounts = Question::whereHas('employee', function($query) use ($schoolId) {
     $query->where('school_id', $schoolId);
 })
-->select('status', \DB::raw('count(*) as total')) // Count total entries per status
+->select('status', DB::raw('count(*) as total')) // Count total entries per status
 ->groupBy('status') // Group by the status
 ->get();
-
-
-$employeeLabels = []; // Initialize labels array
-$employeeData = [];
-
-
-foreach($employeeAnxietyCounts as $anxieti){
-    $employeeLabels[] = $anxieti->status;
-    $employeeData[] = $anxieti->total;
+  foreach ($employeeAnxietyCounts as $anxiety) {
+    $employeeLabels[] = $anxiety->status; // Anxiety status as labels
+    $employeeData[] = $anxiety->total; // Count as data
 }
+// Assuming you have the authenticated coordinator's school ID
 $schoolId = auth()->user()->school_id; // Get the authenticated coordinator's school ID
 
-// Fetch the highest anxiety statuses for employees
 $highestAnxieties = Question::select('employee_id', 'status', DB::raw('count(*) as total'))
     ->whereHas('employee', function ($query) use ($schoolId) {
         $query->where('school_id', $schoolId);
@@ -302,35 +305,40 @@ $highestAnxieties = Question::select('employee_id', 'status', DB::raw('count(*) 
 
 $employeesHighestStatus = [];
 
-// Map employee IDs to their highest anxiety status
 foreach ($highestAnxieties as $anxiety) {
     $employeesHighestStatus[$anxiety->employee_id] = $anxiety->status;
 }
 
 $statusCounts = array_count_values($employeesHighestStatus);
 
-// Get the status with the highest occurrence
-$highestStatus = array_search(max($statusCounts), $statusCounts);
+// Check if $statusCounts is not empty before finding the highest status
+if (!empty($statusCounts)) {
+    // Get the status with the highest occurrence
+    $highestStatus = array_search(max($statusCounts), $statusCounts);
+} else {
+    $highestStatus = null; // Or handle the case when there are no statuses
+}
+
+// You can now use $highestStatus safely
 
 // Filter employees to only include those with the highest anxiety status
-$filteredEmployees = array_filter($employeesHighestStatus, function ($status) use ($highestStatus) {
+$filteredemployees = array_filter($employeesHighestStatus, function ($status) use ($highestStatus) {
     return $status == $highestStatus;
 });
 
 $programData = [];
 
-// Loop through filtered employees and aggregate their program data
-foreach ($filteredEmployees as $employeeId => $status) {
+foreach ($filteredemployees as $employeeId => $status) {
     $employee = Employee::find($employeeId);
 
     // Ensure the employee belongs to the coordinator's school and has a program
-    if ($employee && $employee->school_id == $schoolId && $employee->program) {
-        $programId = $employee->program_id;
+    if ($employee->school_id == $schoolId && $employee->school) {
+        $programId = $employee->school_id;
 
         // Add or update the program count
         if (!isset($programData[$programId])) {
             $programData[$programId] = [
-                'program' => $employee->program->program_name, // safely access program_name
+                'program' => $employee->school->abbrev, // safely access program_name
                 'count' => 1
             ];
         } else {
@@ -339,9 +347,6 @@ foreach ($filteredEmployees as $employeeId => $status) {
     }
 }
 
-// Optionally return or pass $programData to your view or further processing
-
-    
-    return view('guidance_coordinator.employee_data', compact('lowAnxietye', 'moderateAnxietye', 'severeAnxietye', 'employeeLabels', 'employeeData', 'programData'));
+    return view('guidance_coordinator.employee_data', compact('lowAnxiety', 'moderateAnxiety', 'severeAnxiety', 'employeeLabels', 'employeeData', 'programData'));
 }
 }

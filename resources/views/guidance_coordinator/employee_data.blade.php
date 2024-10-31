@@ -9,7 +9,7 @@
             <div class="card-body">
              
                 <h5 class="card-title">Low Anxiety</h5>
-                <h5 class="card-title">{{ $lowAnxietye->count()  }} </h5>
+                <h5 class="card-title">{{ $lowAnxiety->count()  }} </h5>
             
          
             </div>
@@ -21,7 +21,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Moderate Anxiety</h5>
-              <h5 class="card-title">{{ $moderateAnxietye->count() }}</h5>
+              <h5 class="card-title">{{ $moderateAnxiety->count() }}</h5>
             </div>
           </div>
         </div>
@@ -31,7 +31,7 @@
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Severe Anxiety</h5>
-              <h5 class="card-title">{{ $severeAnxietye->count() }}</h5>
+              <h5 class="card-title">{{ $severeAnxiety->count() }}</h5>
             </div>
           </div>
         </div>
@@ -140,7 +140,7 @@ new Chart(document.getElementById("bar-chart-horizontal"), {
     data: {
         labels: programLabels,  // Dynamic labels (program names)
         datasets: [{
-            label: 'Number of Students',
+            label: 'Number of emploee',
             data: programCounts,  // Dynamic data (counts)
             backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],  // Colors for each bar
         }]
