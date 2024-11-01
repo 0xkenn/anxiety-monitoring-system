@@ -165,7 +165,7 @@ Route::prefix('coordinator')->middleware( ['auth:coordinator'])->group(function 
 
 Route::prefix('admin')->middleware( ['auth:admin'])->group(function ()  {
    
-    Route::get('/dashboard', [AdminController::class, 'Dashboard'])->name('admin.dashboard');
+    Route::get('/dashboard', [AdminController::class, 'Home'])->name('admin.dashboard');
     Route::get('/register', [AdminController::class, 'Register']);
     Route::get('/addschool', [AdminController::class, 'School']);
     Route::get('/home', [AdminController::class, 'Home']);

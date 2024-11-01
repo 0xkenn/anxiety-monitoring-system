@@ -52,10 +52,7 @@ class AdminController extends Controller
         if(Auth::guard('admin')->attempt(['user_id' =>$request->user_id,'password' => $request->password])){
          $request->session()->regenerate();
          return redirect()->route('admin.dashboard');
-        }else {
-    // Failed login (for testing)
-    dd('Login failed, please check your credentials');
-}
+        }
     }
 
     //
